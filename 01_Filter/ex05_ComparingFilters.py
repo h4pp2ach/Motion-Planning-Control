@@ -14,9 +14,13 @@ if __name__ == "__main__":
     y_LPF = []
     y_KF = []
     
-    signal = pd.read_csv("01_filter/Data/example_KalmanFilter_1.csv")
+    signal = pd.read_csv("Data/example_KalmanFilter_1.csv")
 
     #Code
+    y_estimate_AF = AverageFilter(signal.y_measure[0])
+    y_estimate_MAF = MovingAverageFilter(signal.y_measure[0], 12)
+    y_estimate_LPF = LowPassFilter(signal.y_measure[0], 0.58)
+    y_estimate_KF = KalmanFilter(signal.y_measure[0], 0.1, 0.1)
     
     for i, row in signal.iterrows():
         t.append(signal.time[i])
@@ -31,7 +35,7 @@ if __name__ == "__main__":
         y_LPF.append(y_estimate_LPF.y_estimate)
         # Kalman filter
         y_estimate_KF.estimate(signal.y_measure[i],signal.u[i])
-        y_KF.append(y_estimate_KF.x_estimate)
+        y_KF.append(y_estimate_KF.x_estimate[1, 0])
         
 
     plt.figure()
