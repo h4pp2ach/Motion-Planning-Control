@@ -3,20 +3,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 class KalmanFilter:
-    def __init__(self, y_Measure_init, m = 1.0, step_time = 0.01, modelVariance = 0.1, measureVariance = 0.9, errorVariance_init = 10.0):
-        self.A = np.array(  [[1.0, step_time],
-                            [0.0, 1.0]])
+    def __init__(self, y_Measure_init, m = 1.0, step_time = 0.001, modelVariance = 0.01, measureVariance = 1.0, errorVariance_init = 1.0):
+        self.A = np.array([[1.0, step_time],
+                           [0.0,       1.0]])
         
-        self.B = np.array(  [[(step_time**2)/(2*m)],
-                            [step_time/m]])
+        self.B = np.array([[(step_time**2)/(2*m)],
+                           [         step_time/m]])
         
         self.C = np.array([[0.0, 1.0]])
         self.D = 0.0
         
-        self.x_estimate = np.array( [[0.0], 
-                            [y_Measure_init]])
+        self.x_estimate = np.array([[           0.0], 
+                                    [y_Measure_init]])
         
-        self.Q = np.array([[0.0, 0.0], [0.0, modelVariance]])
+        self.Q = np.array([[modelVariance,           0.0],
+                           [          0.0, modelVariance]])
         self.R = np.array([[measureVariance]])
         self.P_estimate = np.eye(2) * errorVariance_init
 
@@ -33,7 +34,7 @@ class KalmanFilter:
         self.P_estimate = (I - K @ self.C) @ self.P_predict
 
 if __name__ == "__main__":
-    signal = pd.read_csv("Data/example_KalmanFilter_1.csv")
+    signal = pd.read_csv("01_Filter/Data/example_KalmanFilter_1.csv")
 
     y_estimate = KalmanFilter(signal.y_measure[0], 0.1, 0.1)
     for i, row in signal.iterrows():
@@ -49,6 +50,4 @@ if __name__ == "__main__":
     plt.axis("equal")
     plt.grid(True)
     plt.show()
-
-
 
