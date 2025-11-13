@@ -4,27 +4,42 @@ from lane_1 import lane
 
 # Polynomial value calculation
 def Polyval(coeff, x):
-    # Code
-    return 0
+    c0, c1, c2, c3 = coeff.flatten()
+    
+    return c3*(x**3) + c2*(x**2) + c1*(x) + c0
         
 # Global coordinate --> Local coordinate
 def Global2Local(global_points, yaw_ego, X_ego, Y_ego):
-    # Code
-    return 0
+    local_points = np.zeros((len(global_points), 2))
+    R_inv = np.array([[ np.cos(yaw_ego), np.sin(yaw_ego)],
+                      [-np.sin(yaw_ego), np.cos(yaw_ego)]])
+    
+    for i, (X, Y) in enumerate(global_points):
+        local_points[i] = R_inv @ np.array([X - X_ego, Y - Y_ego])
+        
+    return local_points
         
 # Polynomial fitting (n_th order)
 def Polyfit(points, num_order):
-    # Code
-    return 0
+    num_points = points.shape[0]
+    A = np.zeros((num_points, num_order+1))
+    b = np.zeros((num_points, 1))
+    
+    for i, point in enumerate(points):
+        b[i] = point[1]
+        for degree in range(num_order+1):
+            A[i][degree] = point[0]**(degree)
+    
+    coeff = np.linalg.pinv(A) @ b
+    return coeff
 
 # Both lane to path
 def BothLane2Path(coeff_L, coeff_R):
-    # Code
-    return 0
+    return (coeff_L + coeff_R) / 2.0
 
 # Vehicle model
 class VehicleModel_Lat(object):
-    def __init__(self, step_time, Vx, m=500, L=4, kv=0.005, Pos=[0.0,0.0,0.0]):
+    def __init__(self, step_time, Vx, m=500, L=4, kv=0.005, Pos=[0.0, 0.0, 0.0]):
         self.dt = step_time
         self.m = m
         self.L = L
