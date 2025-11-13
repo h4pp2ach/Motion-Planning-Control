@@ -6,6 +6,37 @@ from ex06_GlobalFrame2LocalFrame import Global2Local
 from ex06_GlobalFrame2LocalFrame import PolynomialFitting
 from ex06_GlobalFrame2LocalFrame import PolynomialValue
 
+class PD_Controller(object):
+    def __init__(self, dt, coef, kv, Kp, Kd):
+        self.kv = kv
+        
+        self.Kp = Kp
+        self.Kd = Kd
+        self.dt = dt
+        
+        self.error = coef[0][0]
+        self.error_prev = self.error
+        
+        self.u = 0
+        
+    def ControllerInput(self, coef, Vx):
+        self.error = coef[0][0]
+        kappa = self.curvature(coef, 0)
+        
+        P_term = self.Kp*(self.error)
+        D_term = self.Kd*(self.error - self.error_prev) / self.dt
+        FeedFowrad_Term = self.kv*(Vx**2)*kappa
+        
+        self.u = P_term + D_term + FeedFowrad_Term
+        self.error_prev = self.error
+    
+    def curvature(self, coeff, x):
+        c0, c1, c2, c3 = coeff.flatten()
+        
+        dy  = c1 + 2*c2*(x) + 3*c3*(x**2)
+        d2y = 2*c2 + 6*c3*(x)
+        
+        return d2y / (1.0 + (dy)**2)**1.5
     
 if __name__ == "__main__":
     step_time = 0.1
@@ -15,13 +46,6 @@ if __name__ == "__main__":
     Y_ref = 2.0-2*np.cos(X_ref/10)
     num_degree = 3
     num_point = 5
-    x_local = np.arange(0.0, 10.0, 0.5)
-
-    class PD_Controller(object):
-        def __init__(self):
-            # Code
-        def ControllerInput(self):
-            # Code
     
     time = []
     X_ego = []
@@ -30,19 +54,21 @@ if __name__ == "__main__":
 
     frameconverter = Global2Local(num_point)
     polynomialfit = PolynomialFitting(num_degree,num_point)
-    polynomialvalue = PolynomialValue(num_degree,np.size(x_local))
-    controller = PID_Controller_Kinematic(step_time, polynomialfit.coeff, Vx)
+    controller = PD_Controller(step_time, polynomialfit.coeff, ego_vehicle.kv,
+                               Kp = 3.0, Kd = 0.5)
     
     for i in range(int(simulation_time/step_time)):
         time.append(step_time*i)
         X_ego.append(ego_vehicle.X)
         Y_ego.append(ego_vehicle.Y)
+        
         X_ref_convert = np.arange(ego_vehicle.X, ego_vehicle.X+5.0, 1.0)
         Y_ref_convert = 2.0-2*np.cos(X_ref_convert/10)
         Points_ref = np.transpose(np.array([X_ref_convert, Y_ref_convert]))
-        frameconverter.convert(Points_ref, ego_vehicle.Yaw, ego_vehicle.X, ego_vehicle.Y)
+        
+        frameconverter.convert(Points_ref[:num_point], ego_vehicle.Yaw, ego_vehicle.X, ego_vehicle.Y)
         polynomialfit.fit(frameconverter.LocalPoints)
-        polynomialvalue.calculate(polynomialfit.coeff, x_local)
+        
         controller.ControllerInput(polynomialfit.coeff, Vx)
         ego_vehicle.update(controller.u, Vx)
 
