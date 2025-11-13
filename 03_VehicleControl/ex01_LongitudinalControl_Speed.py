@@ -5,10 +5,27 @@ from VehicleModel_Long import VehicleModel_Long
 
 class PID_Controller_Speed(object):
     def __init__(self, reference, measure, step_time, P_Gain=0.0, D_Gain=0.0, I_Gain=0.0):
-        # Code
+        self.Kp = P_Gain
+        self.Ki = I_Gain
+        self.Kd = D_Gain
+        self.dt = step_time
+        
+        self.error = reference - measure
+        self.error_prev = self.error
+        self.error_sum = 0
+        
+        self.u = 0
+        
     def ControllerInput(self, reference, measure):
-        # Code
-
+        self.error = reference - measure
+        self.error_sum += self.error * self.dt
+        
+        P_term = self.Kp * (self.error)
+        I_term = self.Ki * (self.error_sum)
+        D_term = self.Kd * (self.error - self.error_prev) / self.dt
+        
+        self.u = P_term + I_term + D_term
+        self.error_prev = self.error
         
 
 if __name__ == "__main__":
@@ -22,7 +39,9 @@ if __name__ == "__main__":
     ax = []
     time = []
     plant = VehicleModel_Long(step_time, m, 0.5, 0.0, 0.0)
-    controller = PID_Controller_Speed(reference_speed, plant.vx, step_time)
+    controller = PID_Controller_Speed(reference_speed, plant.vx, step_time,
+                                      P_Gain = 3.0, D_Gain = 0.0, I_Gain = 0.004)
+    
     for i in range(int(simulation_time/step_time)):
         time.append(step_time*i)
         Vx.append(plant.vx)
