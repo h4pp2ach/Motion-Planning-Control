@@ -4,9 +4,12 @@ from lane_1 import lane
 
 # Polynomial value calculation
 def Polyval(coeff, x):
-    c0, c1, c2, c3 = coeff.flatten()
+    coeff = coeff.flatten()
+    y = 0.0
+    for degree, c in enumerate(coeff):
+        y += c * (x**degree)
     
-    return c3*(x**3) + c2*(x**2) + c1*(x) + c0
+    return y
         
 # Global coordinate --> Local coordinate
 def Global2Local(global_points, yaw_ego, X_ego, Y_ego):
