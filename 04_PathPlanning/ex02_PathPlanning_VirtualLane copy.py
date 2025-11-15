@@ -1,16 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lane_2 import lane
-from ex01_PathPlanning_BothLane import Global2Local, Polyfit, VehicleModel_Lat, PurePursuit
+from ex01_PathPlanning_BothLane import Global2Local, Polyfit, Polyval, VehicleModel_Lat, PurePursuit
 
 class LaneWidthEstimator(object):
     def __init__(self, Lw_init=3.0):
         self.Lw = Lw_init
-    # Code
+    
+    def update(self, coeff_L, coeff_R, isLaneValid_L, isLaneValid_R):
+        if isLaneValid_L and isLaneValid_R:
+            x_forward = np.arange(0.0, 2.0, 0.1)
+            y_L = Polyval(coeff_L, x_forward)
+            y_R = Polyval(coeff_R, x_forward)
+            self.Lw = np.mean(y_L - y_R)
+        
 
 def EitherLane2Path(coeff_L, coeff_R, isLaneValid_L, isLaneValid_R, Lw):
-    # Code
-    return 0
+    
+    if not isLaneValid_L and not isLaneValid_R:
+        return np.zeros((4, 1))
+    
+    if not isLaneValid_L:
+        coeff_L = coeff_R.copy()
+        coeff_L[0][0] += Lw
+    
+    if not isLaneValid_R:
+        coeff_R = coeff_L.copy()
+        coeff_R[0][0] -= Lw
+    
+    return (coeff_L + coeff_R) / 2.0
         
 if __name__ == "__main__":
     step_time = 0.1
